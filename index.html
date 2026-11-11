@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="theme-color" content="#d6e8ff">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Portal CBT 2026</title>
+  <title>Informatika CBT 2026</title>
   
   <!-- 2. Favicon SVG Data-URI yang Sudah Di-encode -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💻%3C/text%3E%3C/svg%3E">
@@ -330,7 +330,6 @@
       min-height: 1200px;
       border: none;
       background: #fff;
-      display: block;
     }
 
     .hidden { display: none !important; }
@@ -480,11 +479,11 @@
     // === KONFIGURASI CBT + SUPABASE ===
     const EXAM_ID = "INFORMATIKA2026";
     const API_URL = "https://gbrrfdtospczcqzfmddk.supabase.co/functions/v1/cbt-violation";
-    const SUPABASE_ANON_KEY = "sb_publishable_RUPj5lBW2meoJpS0G1Aryg_vzS-P59I";
-    <!-- const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeXFB2oUBhAiqXAwhLyQcX8SPeGIPgS3WdE6yFIawRkwBx4QA/viewform?embedded=true"; -->
-	const FORM_URL = "https://forms.gle/uRwC73tHfy4iH8Ly6";
+	const SUPABASE_ANON_KEY ="sb_publishable_RUPj5lBW2meoJpS0G1Aryg_vzS-P59I";
+    const FORM_URL = "https://forms.gle/GZHkPaTc1GdtUogR8";
 	
-    let examDurationMinutes = 60;
+
+    let examDurationMinutes = 60; 
     let maxViolations = 5;
     let timeRemaining = examDurationMinutes * 60;
     let violationCount = 0;
@@ -505,19 +504,30 @@
     const participantInput = document.getElementById('participantCode');
 
     async function cbtRequest(payload) {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": "Bearer " + SUPABASE_ANON_KEY
-        },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Permintaan CBT gagal.");
-      return result;
-    }
+  console.log("CBT REQUEST:", payload);
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(payload)
+  });
+
+  console.log("HTTP STATUS:", response.status);
+
+  const result = await response.json().catch(() => ({}));
+
+  console.log("CBT RESPONSE:", result);
+
+  if (!response.ok) throw new Error(result.error || "Permintaan CBT gagal.");
+
+  return result;
+}
+	
+    
 
     function showPermanentLockScreen(message) {
       startScreen.classList.add('hidden');
@@ -558,10 +568,10 @@
       });
     }
 
-    // Google Forms selalu ditanam langsung di area CBT (tidak membuka tab baru).
+    // Google Forms ditampilkan langsung di area CBT (seperti file kedua), bukan tombol/tab baru.
     function mountGoogleForm() {
       if (document.getElementById("examFrame")) return;
-      frameContainer.innerHTML = `<iframe id="examFrame" title="Formulir Ujian" src="${FORM_URL}" width="100%" height="1200" frameborder="0" marginheight="0" marginwidth="0" scrolling="yes" allow="clipboard-write">Memuat formulir ujian...</iframe>`;
+      frameContainer.innerHTML = `<iframe id="examFrame" title="Formulir Ujian" src="${FORM_URL}" width="100%" height="1200" frameborder="0" marginheight="0" marginwidth="0" scrolling="yes" allow="clipboard-write">Memuat formulir PSAS...</iframe>`;
     }
     mountGoogleForm();
 
@@ -684,7 +694,6 @@
         else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
         try { if ('wakeLock' in navigator) wakeLockSentinel = await navigator.wakeLock.request('screen'); } catch (err) {}
         startScreen.classList.add('hidden');
-        mountGoogleForm();
         isExamActive = true;
         startTimer();
       } catch (err) { alert("Tidak dapat memulai ujian: " + err.message); }
