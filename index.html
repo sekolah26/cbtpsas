@@ -295,6 +295,25 @@
       letter-spacing: 1px;
     }
 
+    .timer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .finish-btn {
+      border: 1px solid #dc2626;
+      background: #fff1f2;
+      color: #b91c1c;
+      border-radius: 20px;
+      padding: 7px 13px;
+      font-size: .82rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .finish-btn:hover { background: #fee2e2; }
+
     .timer-warning {
       background: #ef4444;
       border-color: #dc2626;
@@ -346,6 +365,8 @@
       header { height:56px; padding:0 10px; }
       .form-container { top:56px; height:calc(100% - 56px); }
       .timer-badge { padding:6px 9px; font-size:.82rem; }
+      .timer-actions { gap:5px; }
+      .finish-btn { padding:6px 9px; font-size:.72rem; }
       .exam-title { font-size:.82rem; }
       .violation-badge { font-size:.62rem; }
     }
@@ -411,8 +432,8 @@
         </div>
       </div>
 
-      <label for="participantCode" style="display:block;text-align:left;font-size:.78rem;font-weight:700;color:#334155;margin:0 0 6px">Nomor Peserta / NIS</label>
-      <input id="participantCode" class="participant-input" type="text" inputmode="text" autocomplete="off" maxlength="40" placeholder="Masukkan nomor peserta / NIS" aria-label="Kode peserta">
+      <label for="participantCode" style="display:block;text-align:left;font-size:.78rem;font-weight:700;color:#334155;margin:0 0 6px">KODE PESERTA / NIS</label>
+      <input id="participantCode" class="participant-input" type="text" inputmode="text" autocomplete="off" maxlength="40" placeholder="Masukkan kode peserta" aria-label="Kode peserta">
 
       <button class="btn-glow" onclick="startExam()">
         <span>Mulai Mengerjakan</span>
@@ -466,8 +487,11 @@
         <span class="violation-badge" id="violationText">Pelanggaran: 0/5</span>
       </div>
     </div>
-    <!-- Timer Header 60 Menit -->
-    <div class="timer-badge" id="timer">60:00</div>
+    <!-- Timer dan tombol selesai -->
+    <div class="timer-actions">
+      <div class="timer-badge" id="timer">60:00</div>
+      <button type="button" class="finish-btn" id="finishExamBtn" onclick="finishExam()">SELESAI</button>
+    </div>
   </header>
 
   <!-- Area Google Form Resmi Fisika Materi Gerak -->
@@ -480,7 +504,7 @@
     const EXAM_ID = "INFORMATIKA2026";
     const API_URL = "https://gbrrfdtospczcqzfmddk.supabase.co/functions/v1/cbt-violation";
 	const SUPABASE_ANON_KEY ="sb_publishable_RUPj5lBW2meoJpS0G1Aryg_vzS-P59I";
-    const FORM_URL = "https://forms.gle/GZHkPaTc1GdtUogR8";
+    const FORM_URL = "https://docs.google.com/forms/d/e/Be6cDp7LK3vAjnyk7/viewform?embedded=true";
 	
 
     let examDurationMinutes = 60; 
@@ -697,6 +721,38 @@
         isExamActive = true;
         startTimer();
       } catch (err) { alert("Tidak dapat memulai ujian: " + err.message); }
+    }
+
+    async function finishExam() {
+      if (!isExamActive) return;
+      const confirmed = confirm("Apakah Anda yakin ingin menyelesaikan ujian dan kembali ke menu awal?");
+      if (!confirmed) return;
+
+      isExamActive = false;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      stopAlarm();
+
+      // Hapus sesi lokal agar peserta kembali ke menu awal dan dapat memulai sesi baru.
+      sessionStorage.removeItem("CBT_SESSION_" + EXAM_ID);
+      cbtSessionId = null;
+      serverExpiresAt = null;
+
+      try {
+        if (wakeLockSentinel) {
+          await wakeLockSentinel.release();
+          wakeLockSentinel = null;
+        }
+      } catch (e) {}
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+      } catch (e) {}
+
+      timerDisplay.textContent = "60:00";
+      timerDisplay.classList.remove("timer-warning");
+      startScreen.classList.remove("hidden");
+      alert("Ujian diakhiri. Anda kembali ke menu awal CBT.");
     }
 
     function startTimer() {
